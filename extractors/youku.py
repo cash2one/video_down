@@ -109,7 +109,7 @@ class YouKu:
 			return {'name':self.title, 'video_poster': self.img, 'video_urls':m3u8_list_url}			
 
 if __name__ == "__main__":
-	youku_obj = YouKu(video_url='http://v.youku.com/v_show/id_XMTI1OTczNDM5Mg==.html?from=y1.2-2.4.9')
+	youku_obj = YouKu(video_url='http://v.youku.com/v_show/id_t8fXOcZsyPQ.html?from=y1.2-2.4.9')
 	print(youku_obj.getYouKuUrl())
 
 	# print(youku_obj.vid)

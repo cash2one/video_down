@@ -5,7 +5,8 @@ import requests
 import json
 import jsonpickle
 import re
-import youku
+from extractors import youku
+from extractors.tudou import get_tudou_vcode
 
 app = Flask(__name__)
 api = restful.Api(app)
@@ -262,12 +263,39 @@ class YouKu(restful.Resource):
 
 		return {'code': -1, 'msg':'没有抓取到视频地址'}
 
-	def youku_vid(self, url):
-		vid_search = re.search('id_(.*?).html', url)
-		if vid_search:
-			return vid_search.group(1)
+class Tudou(restful.Resource):
+	"""
+	土豆的视频处理 
+	这是土豆直接解析地址，不分格式:
+	http://cnc.v2.tudou.com/f?id=233753311
+	"""
 
-		return None
+	def get(self, is_user_agent="pc"):
+		"""
+		is_user_agent:参数默认pc，为client表示客户端
+		"""
+
+		video_url = 'http://www.tudou.com/albumplay/yKNjP5Tg2I8/9tOwnCJnATQ.html' # 测试用，正式发布需要删除
+
+		if 'video_url' in flask_request.args and flask_request.args['video_url'] is not None:
+			video_url = flask_request.args['video_url']
+
+		user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
+		if is_user_agent is not None and is_user_agent == "client":
+			user_agent = flask_request.headers["User-Agent"]
+
+		try:
+			vcode = get_tudou_vcode(video_url)
+			if vcode:
+				youku_obj = youku.YouKu(video_url="http://v.youku.com/v_show/id_%s.html" % vcode)
+				video_json_dict = youku_obj.getYouKuUrl()
+				return {'code': 0, 'video':video_json_dict}
+			else:
+				{'code': -1, 'msg':'不支持解析'}
+		except Exception as e:
+			return {'code': -1, 'msg':'抓取视频出错'}
+
+		return {'code': -1, 'msg':'没有抓取到视频地址'}
 
 
 api.add_resource(MiaoPai, '/miaopai/<string:is_user_agent>')
@@ -275,6 +303,7 @@ api.add_resource(MeiPai, '/meipai/<string:is_user_agent>')
 api.add_resource(WeiBoShiPin, '/weiboshipin/<string:is_user_agent>')
 api.add_resource(TengXun, '/tengxun/<string:is_user_agent>')
 api.add_resource(YouKu, '/youku/<string:is_user_agent>')
+api.add_resource(Tudou, '/tudou/<string:is_user_agent>')
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', port=5001, debug=True)
