@@ -142,4 +142,4 @@ api.add_resource(WeiBoShiPin, '/weiboshipin/<string:is_user_agent>')
 api.add_resource(Video, '/video/<string:is_user_agent>')
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=5001, debug=True)
+	app.run(host='0.0.0.0')
