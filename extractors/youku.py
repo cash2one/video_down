@@ -106,10 +106,40 @@ class YouKu:
 
 			m3u8_list_url = self.__class__.parse_m3u8(m3u8_url_response.text)
 
-			return {'name':self.title, 'video_poster': self.img, 'video_urls':m3u8_list_url}			
+			return {'name':self.title, 'video_poster': self.img, 'video_urls':m3u8_list_url}
+
+
+def getVideoObject(video_url=None, user_agent=None):
+	"""
+	优酷的视频处理 
+	这是优酷的地门地址：
+	http://v.youku.com/player/getPlayList/VideoIDS/XMTI2NDIyMDkxMg==
+	is_user_agent:参数默认pc，为client表示客户端
+	"""
+
+	video_url0 = 'http://v.youku.com/v_show/id_XNzQwOTkzNTM2.html?from=y1.3-idx-uhome-1519-20887.205905.1-1.1-8-1-1-0' # 测试用，正式发布需要删除
+
+	# youku_get_url = 'http://v.youku.com/player/getPlayList/VideoIDS/%s/Pf/4/ctype/12/ev/1'
+
+	if video_url:
+		video_url0 = video_url
+
+	user_agent0 = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
+	if user_agent:
+		user_agent0 = user_agent
+	try:
+		youku_obj = YouKu(video_url=video_url0)
+		video_json_dict = youku_obj.getYouKuUrl()
+		video_json_dict['type'] = "优酷"
+		return {'code': 0, 'video':video_json_dict}
+	except Exception as e:
+		return {'code': -1, 'msg':'抓取视频出错'}
+
+	return {'code': -1, 'msg':'没有抓取到视频地址'}	
 
 if __name__ == "__main__":
-	youku_obj = YouKu(video_url='http://v.youku.com/v_show/id_t8fXOcZsyPQ.html?from=y1.2-2.4.9')
-	print(youku_obj.getYouKuUrl())
+	# youku_obj = YouKu(video_url='http://v.youku.com/v_show/id_t8fXOcZsyPQ.html?from=y1.2-2.4.9')
+	# print(youku_obj.getYouKuUrl())
 
 	# print(youku_obj.vid)
+	print(getVideoObject())

@@ -11,116 +11,35 @@ from extractors.tudou import get_tudou_vcode
 app = Flask(__name__)
 api = restful.Api(app)
 
-class MiaoPai(restful.Resource):
-	"""秒拍的视频处理"""
+# sites = [{"id": "miaopai.com", "name":"秒拍"}]
+
+class Video(restful.Resource):
+	"""公共的视频处理"""
 	def get(self, is_user_agent="pc"):
 		"""
 		is_user_agent:参数默认pc，为client表示客户端
 		"""
-		video_url = 'http://miaopai.com/show/5LPgnn12nqst7IoBAHCN1Q__.htm' # 测试用，正式发布需要删除
+		video_url = 'http://www.tudou.com/albumplay/yKNjP5Tg2I8/9tOwnCJnATQ.html' # 测试用，正式发布需要删除
 		if 'video_url' in flask_request.args and flask_request.args['video_url'] is not None:
-			print(flask_request.args['video_url'])
 			video_url = flask_request.args['video_url']
 
-		myUrl = video_url
 		user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
 		if is_user_agent is not None and is_user_agent == "client":
 			user_agent = flask_request.headers["User-Agent"]
 
-		try:
-			headers = {'User-Agent' : user_agent}
-			req = request.Request(myUrl, headers = headers)
-			my_response = request.urlopen(req)
+		if video_url.find("miaopai.com") > -1:
+			from extractors.miaopai import getVideoObject
+		if video_url.find("meipai.com") > -1:
+			from extractors.meipai import getVideoObject
+		if video_url.find("qq.com") > -1:
+			from extractors.tengxun import getVideoObject
+		if video_url.find("youku.com") > -1:
+			from extractors.youku import getVideoObject
+		if video_url.find("tudou.com") > -1:
+			from extractors.tudou import getVideoObject
+		
+		return getVideoObject(video_url=video_url)
 
-			my_page = my_response.read()
-
-			unicode_page = my_page.decode("utf-8")
-			# print(unicode_page)
-
-			title_search = re.search('<title>.*?</title>', unicode_page)
-
-			video_name = "" # 视频名称
-			if title_search :
-				title_value_re = re.findall('<title>(.*?)</title>', title_search.group())
-				if title_value_re is not None and len(title_value_re) > 0:
-					video_name = title_value_re[0]
-
-			result_search = re.search('<video.*?</video>', unicode_page)
-
-			if result_search:
-				video_str = result_search.group()
-				video_src = re.findall("src=\'(.*?)\'", video_str)
-				video_poster = re.findall("poster=\'(.*?)\'", video_str)
-				video_src_value = ''
-				video_poster_value = ''
-				if video_src is not None and len(video_src) > 0:
-					video_src_value = video_src[0]
-
-				if video_poster is not None and len(video_poster) > 0:
-					video_poster_value = video_poster[0]
-
-				return {'code': 0, 'video': {'video_url' : video_src_value, 'video_poster' : video_poster_value, 'name': video_name}}
-
-			# print(flask_request.headers["User-Agent"])
-		except Exception as e:
-			return {'code': -1, 'msg':'抓取视频出错'}
-
-		return {'code': -1, 'msg':'没有抓取到视频地址'}
-
-class MeiPai(restful.Resource):
-	"""美拍的视频处理"""
-	def get(self, is_user_agent="pc"):
-		"""
-		is_user_agent:参数默认pc，为client表示客户端
-		"""
-
-		video_url = 'http://www.meipai.com/media/306869935' # 测试用，正式发布需要删除
-
-		if 'video_url' in flask_request.args and flask_request.args['video_url'] is not None:
-			print(flask_request.args['video_url'])
-			video_url = flask_request.args['video_url']
-
-		myUrl = video_url
-		user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
-		if is_user_agent is not None and is_user_agent == "client":
-			user_agent = flask_request.headers["User-Agent"]
-
-		try:
-			headers = {'User-Agent' : user_agent}
-			req = request.Request(myUrl, headers = headers)
-			my_response = request.urlopen(req)
-
-			my_page = my_response.read()
-
-			unicode_page = my_page.decode("utf-8")
-
-			title_search = re.search('<title>.*?</title>', unicode_page)
-			video_name = "" # 视频名称
-			if title_search :
-				title_value_re = re.findall('<title>(.*?)</title>', title_search.group())
-				if title_value_re is not None and len(title_value_re) > 0:
-					video_name = title_value_re[0]
-
-			result_search = re.search('data-video=.*?</div>', unicode_page, re.S)
-
-			if result_search:
-				video_str = result_search.group()
-				video_src = re.findall("data-video=\"(.*?)\"", video_str)
-				video_poster = re.findall('<img.*?id="fVideoImg".*?src=\"(.*?)\"', video_str)
-				video_src_value = ''
-				video_poster_value = ''
-				if video_src is not None and len(video_src) > 0:
-					video_src_value = video_src[0]
-
-				if video_poster is not None and len(video_poster) > 0:
-					video_poster_value = video_poster[0]
-
-				return {'code': 0, 'video': {'video_url' : video_src_value, 'video_poster' : video_poster_value, 'name': video_name}}
-
-		except Exception as e:
-			return {'code': -1, 'msg':'抓取视频出错'}
-
-		return {'code': -1, 'msg':'没有抓取到视频地址'}
 
 class WeiBoShiPin(restful.Resource):
 	"""微搏的视频处理 , 待续"""
@@ -178,132 +97,49 @@ class WeiBoShiPin(restful.Resource):
 
 		return {'code': -1, 'msg':'没有抓取到视频地址'}
 
-class TengXun(restful.Resource):
-	"""
-	腾讯的视频处理 , 待续
-	这是一个包含视频的封面和title的地址：
-	http://ncgi.video.qq.com/tvideo/fcgi-bin/vp_iphone?plat=2&otype=json&vid=x0016kc6wor
-	"""
-	def get(self, is_user_agent="pc"):
-		"""
-		is_user_agent:参数默认pc，为client表示客户端
-		"""
 
-		video_url = 'http://m.v.qq.com/play/play.html?coverid=fb67wf0ood33ubp&vid=x0016kc6wor&type=5&noright=0&protype=3&charge=0&ptag=4_4.0.2.8756_wxf' # 测试用，正式发布需要删除
+# class Tudou(restful.Resource):
+# 	"""
+# 	土豆的视频处理 
+# 	这是土豆直接解析地址，不分格式:
+# 	http://cnc.v2.tudou.com/f?id=233753311
+# 	"""
 
+# 	def get(self, is_user_agent="pc"):
+# 		"""
+# 		is_user_agent:参数默认pc，为client表示客户端
+# 		"""
 
-		tengxun_get_url = 'http://vv.video.qq.com/geturl?vid=%s&otype=xml&platform=1'
-		tengxun_get_info = 'http://vv.video.qq.com/getinfo?otype=xml&vid=%s'
+# 		video_url = 'http://www.tudou.com/albumplay/yKNjP5Tg2I8/9tOwnCJnATQ.html' # 测试用，正式发布需要删除
 
-		video_vid_value = '' # 视频的vid
-		video_url_value = '' # 存储视频地址
-		video_name = '' # 视频名称
-		video_poster = 'http://shp.qpic.cn/qqvideo_ori/0/%s_496_280/0' # 视频封面
+# 		if 'video_url' in flask_request.args and flask_request.args['video_url'] is not None:
+# 			video_url = flask_request.args['video_url']
 
-		if 'video_url' in flask_request.args and flask_request.args['video_url'] is not None:
-			video_url = flask_request.args['video_url']
+# 		user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
+# 		if is_user_agent is not None and is_user_agent == "client":
+# 			user_agent = flask_request.headers["User-Agent"]
 
-		myUrl = video_url = video_url+'&'
-		user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
-		if is_user_agent is not None and is_user_agent == "client":
-			user_agent = flask_request.headers["User-Agent"]
+# 		try:
+# 			vcode = get_tudou_vcode(video_url)
+# 			if vcode:
+# 				youku_obj = youku.YouKu(video_url="http://v.youku.com/v_show/id_%s.html" % vcode)
+# 				video_json_dict = youku_obj.getYouKuUrl()
+# 				return {'code': 0, 'video':video_json_dict}
+# 			else:
+# 				{'code': -1, 'msg':'不支持解析'}
+# 		except Exception as e:
+# 			return {'code': -1, 'msg':'抓取视频出错'}
 
-		video_vid_re = re.findall('vid=(.*?)&', video_url)
-
-		if video_vid_re is not None and len(video_vid_re) > 0:
-			video_vid_value = video_vid_re[0] # 取出url中的vid
-			
-			response = requests.get(tengxun_get_url % video_vid_value)
-
-			response_video_name_xml = requests.get(tengxun_get_info % video_vid_value)
-			video_name_re = re.findall('<ti>(.*?)</ti>', response_video_name_xml.text)
-			if video_name_re and len(video_name_re) > 0:
-				video_name = video_name_re[0]
-
-			# print(jsonpickle.encode({"code":response.status_code, "msg": response.text}))
-			if response is not None and response.status_code == 200:
-				response_urls = re.findall('<url>(.*?)</url>', response.text)
-				if response_urls:
-					video_url_value = response_urls[0]
-
-					return {'code': 0, 'video': {'video_url' : video_url_value, 'video_poster' : video_poster % video_vid_value, 'name': video_name}}
-
-		return {'code': -1, 'msg':'没有抓取到视频地址'}
-
-class YouKu(restful.Resource):
-	"""
-	优酷的视频处理 
-	这是优酷的地门地址：
-	http://v.youku.com/player/getPlayList/VideoIDS/XMTI2NDIyMDkxMg==
-	"""
-
-	def get(self, is_user_agent="pc"):
-		"""
-		is_user_agent:参数默认pc，为client表示客户端
-		"""
-
-		video_url = 'http://v.youku.com/v_show/id_XNzQwOTkzNTM2.html?from=y1.3-idx-uhome-1519-20887.205905.1-1.1-8-1-1-0' # 测试用，正式发布需要删除
-
-		# youku_get_url = 'http://v.youku.com/player/getPlayList/VideoIDS/%s/Pf/4/ctype/12/ev/1'
+# 		return {'code': -1, 'msg':'没有抓取到视频地址'}
 
 
-		if 'video_url' in flask_request.args and flask_request.args['video_url'] is not None:
-			video_url = flask_request.args['video_url']
-
-		user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
-		if is_user_agent is not None and is_user_agent == "client":
-			user_agent = flask_request.headers["User-Agent"]
-
-		try:
-			youku_obj = youku.YouKu(video_url=video_url)
-			video_json_dict = youku_obj.getYouKuUrl()
-			return {'code': 0, 'video':video_json_dict}
-		except Exception as e:
-			return {'code': -1, 'msg':'抓取视频出错'}
-
-		return {'code': -1, 'msg':'没有抓取到视频地址'}
-
-class Tudou(restful.Resource):
-	"""
-	土豆的视频处理 
-	这是土豆直接解析地址，不分格式:
-	http://cnc.v2.tudou.com/f?id=233753311
-	"""
-
-	def get(self, is_user_agent="pc"):
-		"""
-		is_user_agent:参数默认pc，为client表示客户端
-		"""
-
-		video_url = 'http://www.tudou.com/albumplay/yKNjP5Tg2I8/9tOwnCJnATQ.html' # 测试用，正式发布需要删除
-
-		if 'video_url' in flask_request.args and flask_request.args['video_url'] is not None:
-			video_url = flask_request.args['video_url']
-
-		user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70 MicroMessenger/6.2 NetType/WIFI Language/zh_CN'
-		if is_user_agent is not None and is_user_agent == "client":
-			user_agent = flask_request.headers["User-Agent"]
-
-		try:
-			vcode = get_tudou_vcode(video_url)
-			if vcode:
-				youku_obj = youku.YouKu(video_url="http://v.youku.com/v_show/id_%s.html" % vcode)
-				video_json_dict = youku_obj.getYouKuUrl()
-				return {'code': 0, 'video':video_json_dict}
-			else:
-				{'code': -1, 'msg':'不支持解析'}
-		except Exception as e:
-			return {'code': -1, 'msg':'抓取视频出错'}
-
-		return {'code': -1, 'msg':'没有抓取到视频地址'}
-
-
-api.add_resource(MiaoPai, '/miaopai/<string:is_user_agent>')
-api.add_resource(MeiPai, '/meipai/<string:is_user_agent>')
+# api.add_resource(MiaoPai, '/miaopai/<string:is_user_agent>')
+# api.add_resource(MeiPai, '/meipai/<string:is_user_agent>')
 api.add_resource(WeiBoShiPin, '/weiboshipin/<string:is_user_agent>')
-api.add_resource(TengXun, '/tengxun/<string:is_user_agent>')
-api.add_resource(YouKu, '/youku/<string:is_user_agent>')
-api.add_resource(Tudou, '/tudou/<string:is_user_agent>')
+# api.add_resource(TengXun, '/tengxun/<string:is_user_agent>')
+# api.add_resource(YouKu, '/youku/<string:is_user_agent>')
+# api.add_resource(Tudou, '/tudou/<string:is_user_agent>')
+api.add_resource(Video, '/video/<string:is_user_agent>')
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', port=5001, debug=True)
