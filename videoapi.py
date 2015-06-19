@@ -8,7 +8,7 @@ import re
 from extractors import youku
 from extractors.tudou import get_tudou_vcode
 
-app = Flask(__name__)
+app = Flask("videoapi")
 api = restful.Api(app)
 
 # sites = [{"id": "miaopai.com", "name":"秒拍"}]

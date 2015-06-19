@@ -3,7 +3,7 @@ from flask import Flask, request as flask_request
 from urllib import request
 import re
 
-app = Flask(__name__)
+app = Flask("video")
 # api = restful.Api(app)
 
 @app.route('/miaopai', methods=['GET'])
