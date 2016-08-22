@@ -39,7 +39,7 @@ def getVideoObject(video_url=None, user_agent=None):
 
 	if video_vid_re is not None and len(video_vid_re) > 0:
 		video_vid_value = video_vid_re[0] # 取出url中的vid
-		
+
 		response = requests.get(tengxun_get_url % video_vid_value)
 
 		response_video_name_xml = requests.get(tengxun_get_info % video_vid_value)
